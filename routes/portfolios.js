@@ -74,7 +74,12 @@ const { calculatePortfolioPerformance } = require('../utils/performance');
 router.get('/:id/performance', async (req, res) => {
   try {
     const portfolioId = req.params.id;
-    const [portfolio] = await db.query(...); // 同上获取组合数据
+    const [portfolio] = await db.query( `SELECT a.id, a.symbol, a.name, a.price, a.type,
+      pa.quantity, pa.purchase_price
+FROM portfolio_asset pa
+JOIN asset a ON pa.asset_id = a.id
+WHERE pa.portfolio_id = ?`,
+[portfolioId]); // 同上获取组合数据
 
     if (portfolio.length === 0) {
       return res.status(404).json({ error: 'Portfolio not found' });
