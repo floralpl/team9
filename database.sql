@@ -1,24 +1,26 @@
-CREATE DATABASE IF NOT EXISTS `protfolio`;
-USE `protfolio`;
-CREATE TABLE portfolio (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    owner_id INT NOT NULL
-);
-CREATE TABLE asset (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    symbol VARCHAR(20) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    type ENUM('stock', 'bond', 'etf', 'fund') NOT NULL  -- 可扩展
-);
-CREATE TABLE portfolio_asset (
-    portfolio_id INT NOT NULL,
-    asset_id INT NOT NULL,
-    quantity INT NOT NULL,
-    purchase_price DECIMAL(10,2) NOT NULL,
+-- 1. 股票信息表
+CREATE TABLE stock_info (
+    stock_code VARCHAR(10) PRIMARY KEY COMMENT '股票代码',
+    stock_name VARCHAR(100) NOT NULL COMMENT '股票名称',
+    company_name VARCHAR(255) COMMENT '股票所属公司',
+    current_price DECIMAL(10, 2) NOT NULL COMMENT '当前价格',
+    history_price JSON COMMENT '历史价格（15天内）'
+) COMMENT='股票信息表';
 
-    PRIMARY KEY (portfolio_id, asset_id),
-    FOREIGN KEY (portfolio_id) REFERENCES portfolio(id) ON DELETE CASCADE,
-    FOREIGN KEY (asset_id) REFERENCES asset(id) ON DELETE CASCADE
-);
+-- 2. 投资表
+CREATE TABLE portfolio (
+    stock_code VARCHAR(10) NOT NULL COMMENT '股票代码',
+    quantity INT NOT NULL DEFAULT 0 COMMENT '持有数量',
+    PRIMARY KEY (stock_code),
+    CONSTRAINT fk_portfolio_stock FOREIGN KEY (stock_code) REFERENCES stock_info(stock_code)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) COMMENT='投资表';
+
+-- 3. 交易记录表
+CREATE TABLE trade_record (
+    trade_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '交易ID',
+    trade_type ENUM('支出', '收入') NOT NULL COMMENT '交易类型',
+    trade_detail TEXT COMMENT '交易内容',
+    amount DECIMAL(10, 2) NOT NULL COMMENT '金额',
+    trade_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '交易时间'
+) COMMENT='交易记录表';
