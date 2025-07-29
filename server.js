@@ -4,34 +4,60 @@ const cors = require('cors');
 const db = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 5000;
 
-// 中间件//
+// 测试数据库连接
+(async () => {
+  try {
+    const [rows] = await db.query('SELECT 1 + 1 AS solution');
+    console.log('数据库连接成功:', rows[0].solution === 2);
+  } catch (err) {
+    console.error('数据库连接失败:', err);
+  }
+})();
+
+// 中间件
 app.use(cors());
 app.use(bodyParser.json());
 
-// 路由导入
-const portfolioRoutes = require('./routes/portfolios');
-const assetRoutes = require('./routes/assets');
-const portfolioAssetRoutes = require('./routes/portfolioAssets');
+// 路由
+app.use('/api/portfolio', require('./routes/portfolios'));
+app.use('/api/stocks', require('./routes/stocks'));
+app.use('/api/trades', require('./routes/trades'));
 
-// 路由注册
-app.use('/api/portfolios', portfolioRoutes);
-app.use('/api/assets', assetRoutes);
-app.use('/api/portfolio-assets', portfolioAssetRoutes);
-
-// 健康检查
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+// 设置初始现金
+// 设置初始现金
+app.post('/api/initialize', async (req, res) => {
+  const { amount } = req.body;
+  
+  try {
+    // 第一步：禁用外键检查
+    await db.query('SET FOREIGN_KEY_CHECKS = 0');
+    
+    // 第二步：删除所有数据（使用DELETE代替TRUNCATE）
+    await db.query('DELETE FROM portfolio');
+    await db.query('DELETE FROM trade_record');
+    
+    // 第三步：重置自增ID（如果需要）
+    await db.query('ALTER TABLE trade_record AUTO_INCREMENT = 1');
+    //await db.query('ALTER TABLE portfolio_asset AUTO_INCREMENT = 1'); // 如果存在portfolio_asset表
+    
+    // 第四步：启用外键检查
+    await db.query('SET FOREIGN_KEY_CHECKS = 1');
+    
+    // 设置初始现金
+    await db.query(
+      `INSERT INTO trade_record (trade_type, trade_detail, amount)
+       VALUES ('收入', '初始资金', ?)`,
+      [amount]
+    );
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 错误处理
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
-
-// 启动服务器
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`服务器运行在 http://localhost:${PORT}`);
 });
