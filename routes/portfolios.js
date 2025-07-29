@@ -2,97 +2,118 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// 创建投资组合
-router.post('/', async (req, res) => {
+// 获取投资组合总览
+router.get('/overview', async (req, res) => {
   try {
-    const { name } = req.body;
-    const [result] = await db.query(
-      'INSERT INTO portfolio (name, owner_id) VALUES (?, 1)',
-      [name]
+    // 计算现金余额
+    const [cashResult] = await db.query(
+      `SELECT 
+        SUM(CASE WHEN trade_type = '收入' THEN amount ELSE 0 END) -
+        SUM(CASE WHEN trade_type = '支出' THEN amount ELSE 0 END) AS balance
+       FROM trade_record`
     );
-    res.status(201).json({ id: result.insertId, name });
+    
+    // 获取持仓股票
+    const [holdings] = await db.query(
+      `SELECT p.stock_code, p.quantity, s.current_price, s.stock_name
+       FROM portfolio p
+       JOIN stock_info s ON p.stock_code = s.stock_code`
+    );
+    
+    // 计算股票总价值
+    const stockValue = holdings.reduce((sum, item) => {
+      return sum + (item.quantity * item.current_price);
+    }, 0);
+    
+    // 计算总资产
+    const totalAssets = cashResult[0].balance + stockValue;
+    
+    res.json({
+      cashBalance: cashResult[0].balance,
+      stockValue,
+      totalAssets,
+      holdings
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// 获取所有投资组合
-router.get('/', async (req, res) => {
+// 添加股票到投资组合
+router.post('/add', async (req, res) => {
+  const { stock_code, quantity, price } = req.body;
+  
   try {
-    const [portfolios] = await db.query('SELECT * FROM portfolio');
-    res.json(portfolios);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 获取单个投资组合详情
-router.get('/:id', async (req, res) => {
-  try {
-    const portfolioId = req.params.id;
-
-    const [portfolio] = await db.query(
-      'SELECT * FROM portfolio WHERE id = ?',
-      [portfolioId]
+    // 添加交易记录（支出）
+    await db.query(
+      `INSERT INTO trade_record (trade_type, trade_detail, amount)
+       VALUES ('支出', '购买股票 ${stock_code}', ?)`,
+      [quantity * price]
     );
-
-    if (portfolio.length === 0) {
-      return res.status(404).json({ error: 'Portfolio not found' });
+    
+    // 更新投资组合
+    const [existing] = await db.query(
+      `SELECT * FROM portfolio WHERE stock_code = ?`,
+      [stock_code]
+    );
+    
+    if (existing.length > 0) {
+      await db.query(
+        `UPDATE portfolio SET quantity = quantity + ? WHERE stock_code = ?`,
+        [quantity, stock_code]
+      );
+    } else {
+      await db.query(
+        `INSERT INTO portfolio (stock_code, quantity) VALUES (?, ?)`,
+        [stock_code, quantity]
+      );
     }
-
-    const [assets] = await db.query(
-      `SELECT a.id, a.symbol, a.name, a.price, a.type,
-              pa.quantity, pa.purchase_price
-       FROM portfolio_asset pa
-       JOIN asset a ON pa.asset_id = a.id
-       WHERE pa.portfolio_id = ?`,
-      [portfolioId]
-    );
-
-    res.json({ ...portfolio[0], assets });
+    
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// 删除投资组合
-router.delete('/:id', async (req, res) => {
+// 从投资组合移除股票
+router.post('/remove', async (req, res) => {
+  const { stock_code, quantity, price } = req.body;
+  
   try {
-    const portfolioId = req.params.id;
-    await db.query('DELETE FROM portfolio WHERE id = ?', [portfolioId]);
-    res.status(204).send();
+    // 检查是否持有足够数量
+    const [holding] = await db.query(
+      `SELECT quantity FROM portfolio WHERE stock_code = ?`,
+      [stock_code]
+    );
+    
+    if (holding.length === 0 || holding[0].quantity < quantity) {
+      return res.status(400).json({ error: '持有数量不足' });
+    }
+    
+    // 添加交易记录（收入）
+    await db.query(
+      `INSERT INTO trade_record (trade_type, trade_detail, amount)
+       VALUES ('收入', '出售股票 ${stock_code}', ?)`,
+      [quantity * price]
+    );
+    
+    // 更新投资组合
+    if (holding[0].quantity === quantity) {
+      await db.query(
+        `DELETE FROM portfolio WHERE stock_code = ?`,
+        [stock_code]
+      );
+    } else {
+      await db.query(
+        `UPDATE portfolio SET quantity = quantity - ? WHERE stock_code = ?`,
+        [quantity, stock_code]
+      );
+    }
+    
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 module.exports = router;
-
-const { calculatePortfolioPerformance } = require('../utils/performance');
-
-// 在获取单个投资组合详情中//
-router.get('/:id/performance', async (req, res) => {
-  try {
-    const portfolioId = req.params.id;
-    const [portfolio] = await db.query( `SELECT a.id, a.symbol, a.name, a.price, a.type,
-      pa.quantity, pa.purchase_price
-FROM portfolio_asset pa
-JOIN asset a ON pa.asset_id = a.id
-WHERE pa.portfolio_id = ?`,
-[portfolioId]); // 同上获取组合数据
-
-    if (portfolio.length === 0) {
-      return res.status(404).json({ error: 'Portfolio not found' });
-    }
-
-    const portfolioWithAssets = {
-      ...portfolio[0],
-      assets: portfolioAssets // 从数据库获取的资产数据
-    };
-
-    const performance = calculatePortfolioPerformance(portfolioWithAssets);
-    res.json(performance);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
