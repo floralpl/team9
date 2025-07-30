@@ -260,7 +260,7 @@
             padding: 12px;
             border: 1px solid var(--border);
             border-radius: 12px;
-        }
+}
 
         .index-name {
             font-weight: 500;
@@ -426,6 +426,39 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* 新增股票图表样式 */
+        .stock-chart-container {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+
+
+        /* 加载动画样式 */
+
+        .loader {
+
+            padding: 16px;
+
+            text-align: center;
+
+            color: var(--text-secondary);
+
+        }
+
+
+
+        .error-message {
+
+            color: var(--negative);
+
+            padding: 16px;
+
+            text-align: center;
+
+        }
     </style>
 </head>
 <body>
@@ -433,53 +466,31 @@
         <!-- 左侧账户信息 -->
         <div class="accounts">
             <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-wallet"></i> 
-                        CASH
-                    </div>
-                    <div class="account-value">$4,601.70</div>
-                </div>
-                
-                <div class="account-items">
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Fidelity Cash</div>
-                            <div class="account-balance">$2,291.90</div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-wallet"></i>
+                            CASH
                         </div>
-                        <div class="account-type">Cash Management</div>
-                        <div class="account-time">13 mins ago</div>
+                        <div class="account-value" id="total-cash-balance">$0.00</div>
                     </div>
-                    
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Wells Fargo</div>
-                            <div class="account-balance">$309.13</div>
-                        </div>
-                        <div class="account-type">Checking</div>
-                        <div class="account-time">13 mins ago</div>
-                    </div>
-                    
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Wells Fargo</div>
-                            <div class="account-balance">$2,000.67</div>
-                        </div>
-                        <div class="account-type">Savings</div>
-                        <div class="account-time">13 mins ago</div>
+
+                    <div class="account-items" id="cash-accounts-container">
+                        <!-- 这里将由JavaScript动态生成账户数据 -->
+                        <div class="loader">加载中...</div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <i class="fas fa-chart-line"></i> 
+                        <i class="fas fa-chart-line"></i>
                         INVESTMENT
                     </div>
                     <div class="account-value">$963,253.45</div>
                 </div>
-                
+
                 <div class="account-items">
                     <div class="account-item">
                         <div class="account-item-header">
@@ -489,7 +500,7 @@
                         <div class="account-type">Skyyer White 401k</div>
                         <div class="account-time">11 mins ago</div>
                     </div>
-                    
+
                     <div class="account-item">
                         <div class="account-item-header">
                             <div class="account-name">Madrigal Electromotive</div>
@@ -498,7 +509,7 @@
                         <div class="account-type">Water White 401k</div>
                         <div class="account-time">10/9/12</div>
                     </div>
-                    
+
                     <div class="account-item">
                         <div class="account-item-header">
                             <div class="account-name">Pershing</div>
@@ -510,9 +521,38 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 中间财务概览 -->
         <div class="middle">
+            <!-- 股票价格走势图现在放在最上面 -->
+            <!-- 中间面板 - 股票价格走势 -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i> 股票持仓分析
+                    </div>
+                </div>
+                <div class="api-controls">
+                    <input type="text" id="ticker-input" class="symbol-input" placeholder="输入股票代码 (如: TSLA)">
+                    <button id="search-btn" class="add-btn">查询</button>
+                    <button id="add-to-portfolio" class="add-btn">加入持仓</button>
+                </div>
+                <div id="stock-error" class="error-message"></div>
+                <div class="stock-chart-container">
+                    <canvas id="stock-chart"></canvas>
+                </div>
+
+                <!-- 新增持仓股票列表 -->
+                <div class="portfolio-list" id="portfolio-container">
+                    <div class="portfolio-header">
+                        <span>持仓股票</span>
+                        <span>当前价值</span>
+                    </div>
+                    <!-- 这里由JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <!-- Net Worth现在放在股票价格走势下面 -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
@@ -522,7 +562,7 @@
                         <span class="active-time">LAST 30 DAYS</span>
                     </div>
                 </div>
-                
+
                 <div class="net-worth">
                     <div>
                         <div class="net-worth-value">$2,317,371.20</div>
@@ -532,17 +572,17 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="chart-container">
                     <canvas id="net-worth-chart"></canvas>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-title" style="margin-bottom: 20px;">
                     <i class="fas fa-exchange-alt"></i> CASH FLOW
                 </div>
-                
+
                 <div class="cash-flow">
                     <div class="flow-income">
                         <div class="flow-chart">
@@ -553,7 +593,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="flow-spending">
                         <div class="flow-chart">
                             <canvas id="spending-chart"></canvas>
@@ -566,7 +606,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 右侧市场信息 -->
         <div class="market">
             <div class="card">
@@ -575,7 +615,7 @@
                         <i class="fas fa-chart-simple"></i> MARKET MOVERS
                     </div>
                 </div>
-                
+
                 <div class="indices">
                     <div class="index">
                         <div>
@@ -589,7 +629,7 @@
                             <span id="sp500-holdings">0.00%</span>
                         </div>
                     </div>
-                    
+
                     <div class="index">
                         <div>
                             <div class="index-name">DOW JONES</div>
@@ -598,7 +638,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="index">
                         <div>
                             <div class="index-name">NASDAQ</div>
@@ -607,7 +647,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="index">
                         <div>
                             <div class="index-name">10-YR BOND</div>
@@ -617,7 +657,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="movers-container">
                     <div class="mover-section">
                         <div class="mover-title positive">
@@ -626,7 +666,7 @@
                         <div id="gainers-container">
                             <div class="mover-item">
                                 <div class="mover-name">
-                                    <span class="loader"></span> 
+                                    <span class="loader"></span>
                                     <span>Loading stocks...</span>
                                 </div>
                                 <div class="mover-value">
@@ -635,7 +675,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mover-section">
                         <div class="mover-title negative">
                             <i class="fas fa-arrow-trend-down"></i> YOUR LOSERS
@@ -643,7 +683,7 @@
                         <div id="losers-container">
                             <div class="mover-item">
                                 <div class="mover-name">
-                                    <span class="loader"></span> 
+                                    <span class="loader"></span>
                                     <span>Loading stocks...</span>
                                 </div>
                                 <div class="mover-value">
@@ -653,14 +693,14 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 搜索股票界面 -->
                 <div class="api-controls">
                     <input type="text" id="symbol-input" class="symbol-input" placeholder="Enter stock symbol (e.g. AAPL)">
                     <button id="add-symbol" class="add-btn">Add Stock</button>
                 </div>
                 <div id="api-error" class="error-message"></div>
-                
+
                 <div class="insights-container">
                     <div class="mover-title">
                         <i class="fas fa-lightbulb"></i> INVESTMENT INSIGHTS
@@ -723,6 +763,19 @@
                     addStock();
                 }
             });
+
+            // 绑定股票搜索按钮事件
+            document.getElementById('search-btn').addEventListener('click', createStockChart);
+            
+            // 允许通过按Enter键搜索股票
+            document.getElementById('ticker-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    createStockChart();
+                }
+            });
+
+            // 默认加载TSLA的数据
+            createStockChart();
         });
 
         // 创建图表
@@ -844,6 +897,125 @@
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             bodyFont: {
                                 size: 13
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 获取股票数据并创建图表
+        async function createStockChart() {
+            // 获取用户输入的股票代码
+            const tickerInput = document.getElementById('ticker-input');
+            const ticker = tickerInput.value.toUpperCase() || 'TSLA'; // 默认显示TSLA
+            
+            try {
+                // 显示加载状态
+                const errorMsg = document.getElementById('stock-error');
+                errorMsg.textContent = `加载 ${ticker} 数据中...`;
+                errorMsg.className = 'error-message';
+                
+                // 调用API获取数据
+                const response = await fetch(`https://c4rm9elh30.execute-api.us-east-1.amazonaws.com/default/cachedPriceData?ticker=${ticker}`);
+                
+                if (!response.ok) {
+                    throw new Error(`无法获取股票数据: ${ticker}`);
+                }
+                
+                const data = await response.json();
+                
+                // 准备图表数据
+                const chartData = prepareChartData(data);
+                
+                // 创建或更新图表
+                updateStockChart(chartData, ticker);
+                
+                errorMsg.textContent = "";
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('stock-error').textContent = `获取股票数据失败: ${error.message}`;
+            }
+        }
+
+        // 准备图表数据
+        function prepareChartData(apiData) {
+            // 提取时间戳和收盘价
+            const timestamps = apiData.timestamp || [];
+            const closes = apiData.close || [];
+            
+            // 转换时间戳为可读日期
+            const labels = timestamps.map(timestamp => {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleDateString();
+            });
+            
+            return {
+                labels: labels,
+                closes: closes
+            };
+        }
+
+        // 创建或更新股票图表
+        function updateStockChart(chartData, ticker) {
+            const ctx = document.getElementById('stock-chart').getContext('2d');
+            
+            // 如果图表已存在，先销毁
+            if (window.stockChart) {
+                window.stockChart.destroy();
+            }
+            
+            // 创建新图表
+            window.stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: `${ticker} 股价`,
+                        data: chartData.closes,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: '股价 (USD)'
                             }
                         }
                     }
