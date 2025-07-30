@@ -1,3 +1,5 @@
+create database portfolio;
+use portfolio;
 -- 1. 股票信息表
 CREATE TABLE stock_info (
     stock_code VARCHAR(10) PRIMARY KEY COMMENT '股票代码',
