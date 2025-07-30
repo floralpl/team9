@@ -7,6 +7,9 @@ https://docs.qq.com/smartsheet/DR0F6cGxoQ0hKVHVO?tab=ss_ydvsoc
 This system is primarily designed for asset management in stock investment scenarios. It enables users to conveniently view price trends of stocks by entering stock codes, helping them quickly understand stock information. The system records stock purchases and sales, continuously updates stock prices, and visually displays investment gains/losses and total asset value. If time permits, the system will also incorporate features for fund/bond investments and salary/income tracking.
 
 ## Key Features
+
+The system mainly includes the management of investment portfolios (i.e., stocks) as well as the calculation and display of assets, with specific functions as follows:
+
 - Query stock information using stock codes
 - Buy/sell stocks and display holdings, with support for recording historical stock purchases
 - Display profit/loss percentages of held stocks categorized by gain/loss type
