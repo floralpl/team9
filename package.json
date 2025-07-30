@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sinclair/typebox": "^0.34.38",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.14.2",
