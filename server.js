@@ -27,7 +27,6 @@ app.use('/api/stocks', require('./routes/stocks'));
 app.use('/api/trades', require('./routes/trades'));
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/stockInfo', require('./routes/stockInfo'));
-
 // 设置初始现金
 // 设置初始现金
 app.post('/api/initialize', async (req, res) => {
