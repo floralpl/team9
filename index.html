@@ -448,7 +448,29 @@
 
         }
 
-
+        .account-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .sell-btn {
+            background-color: var(--negative);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .sell-btn:hover {
+            background-color: #dc2626;
+        }
 
         .error-message {
 
@@ -477,7 +499,6 @@
 
                     <div class="account-items" id="cash-accounts-container">
                         <!-- 这里将由JavaScript动态生成账户数据 -->
-                        <div class="loader">加载中...</div>
                     </div>
                 </div>
             </div>
@@ -490,7 +511,7 @@
                     </div>
                     <div class="account-value">$963,253.45</div>
                 </div>
-
+            
                 <div class="account-items">
                     <div class="account-item">
                         <div class="account-item-header">
@@ -499,8 +520,13 @@
                         </div>
                         <div class="account-type">Skyyer White 401k</div>
                         <div class="account-time">11 mins ago</div>
+                        <div class="account-actions">
+                            <button class="sell-btn" onclick="sellStock('Benneke Fabricators', 16231.00)">
+                                <i class="fas fa-dollar-sign"></i> Sell
+                            </button>
+                        </div>
                     </div>
-
+            
                     <div class="account-item">
                         <div class="account-item-header">
                             <div class="account-name">Madrigal Electromotive</div>
@@ -508,8 +534,13 @@
                         </div>
                         <div class="account-type">Water White 401k</div>
                         <div class="account-time">10/9/12</div>
+                        <div class="account-actions">
+                            <button class="sell-btn" onclick="sellStock('Madrigal Electromotive', 16838.00)">
+                                <i class="fas fa-dollar-sign"></i> Sell
+                            </button>
+                        </div>
                     </div>
-
+            
                     <div class="account-item">
                         <div class="account-item-header">
                             <div class="account-name">Pershing</div>
@@ -517,11 +548,15 @@
                         </div>
                         <div class="account-type">IRA 1</div>
                         <div class="account-time">9 mins ago</div>
+                        <div class="account-actions">
+                            <button class="sell-btn" onclick="sellStock('Pershing', 455191.03)">
+                                <i class="fas fa-dollar-sign"></i> Sell
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
+        </div> 
         <!-- 中间财务概览 -->
         <div class="middle">
             <!-- 股票价格走势图现在放在最上面 -->
@@ -540,15 +575,6 @@
                 <div id="stock-error" class="error-message"></div>
                 <div class="stock-chart-container">
                     <canvas id="stock-chart"></canvas>
-                </div>
-
-                <!-- 新增持仓股票列表 -->
-                <div class="portfolio-list" id="portfolio-container">
-                    <div class="portfolio-header">
-                        <span>持仓股票</span>
-                        <span>当前价值</span>
-                    </div>
-                    <!-- 这里由JavaScript动态生成 -->
                 </div>
             </div>
 
