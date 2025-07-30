@@ -23,6 +23,7 @@ This system is primarily designed for asset management in stock investment scena
 1. Clone the repository:
 ```bash
 git clone https://github.com/floralpl/team9.git
+```
 
 2.Modify the database configuration in db.js according to your setup:
 
@@ -33,11 +34,13 @@ const pool = mysql.createPool({
   password: 'YOUR_PASSWORD', // Replace with your password
   database: 'portfolio',
 });
+```
 
 3.Initialize the database and create tables/views (find database.sql in root directory):
 
 ```bash
 mysql -u [username] -p < database.sql
+```
 
 Enter your password when prompted
 
@@ -45,11 +48,13 @@ Enter your password when prompted
 
 ```bash
 node ./utils/updateStockInfo.js
+```
 
 5.Launch the server:
 
 ```bash
 node server.js
+```
 
 Access the application at:
 https://localhost:5000/index.html
