@@ -499,60 +499,7 @@
 
                     <div class="account-items" id="cash-accounts-container">
                         <!-- 这里将由JavaScript动态生成账户数据 -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="fas fa-chart-line"></i>
-                        INVESTMENT
-                    </div>
-                    <div class="account-value">$963,253.45</div>
-                </div>
-            
-                <div class="account-items">
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Benneke Fabricators</div>
-                            <div class="account-balance">$16,231.00</div>
-                        </div>
-                        <div class="account-type">Skyyer White 401k</div>
-                        <div class="account-time">11 mins ago</div>
-                        <div class="account-actions">
-                            <button class="sell-btn" onclick="sellStock('Benneke Fabricators', 16231.00)">
-                                <i class="fas fa-dollar-sign"></i> Sell
-                            </button>
-                        </div>
-                    </div>
-            
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Madrigal Electromotive</div>
-                            <div class="account-balance">$16,838.00</div>
-                        </div>
-                        <div class="account-type">Water White 401k</div>
-                        <div class="account-time">10/9/12</div>
-                        <div class="account-actions">
-                            <button class="sell-btn" onclick="sellStock('Madrigal Electromotive', 16838.00)">
-                                <i class="fas fa-dollar-sign"></i> Sell
-                            </button>
-                        </div>
-                    </div>
-            
-                    <div class="account-item">
-                        <div class="account-item-header">
-                            <div class="account-name">Pershing</div>
-                            <div class="account-balance">$455,191.03</div>
-                        </div>
-                        <div class="account-type">IRA 1</div>
-                        <div class="account-time">9 mins ago</div>
-                        <div class="account-actions">
-                            <button class="sell-btn" onclick="sellStock('Pershing', 455191.03)">
-                                <i class="fas fa-dollar-sign"></i> Sell
-                            </button>
-                        </div>
+                        <div class="loader"></div>
                     </div>
                 </div>
             </div>
@@ -746,23 +693,6 @@
     </div>
 
     <script>
-        // 用户持仓股票
-        const userPortfolio = {
-            gainers: [
-                { symbol: 'AAPL', name: 'Apple Inc' },
-                { symbol: 'FE', name: 'Firstenergy Corp' },
-                { symbol: 'DUK', name: 'Duke Energy Corp' },
-                { symbol: 'NU', name: 'Northeast Utilities' },
-                { symbol: 'ESI', name: 'ITT Educational Services Inc' }
-            ],
-            losers: [
-                { symbol: 'HTSI', name: 'Harris Teeter Supermarkets Inc' },
-                { symbol: 'GPOR', name: 'Gulfport Energy Corp' },
-                { symbol: 'MSFT', name: 'Microsoft Corp' },
-                { symbol: 'WFC', name: 'Wells Fargo & Co' },
-                { symbol: 'EMN', name: 'Eastman Chemical Co' }
-            ]
-        };
 
         // 市场指数
         const marketIndices = [
@@ -965,6 +895,212 @@
             }
         }
 
+        // 在用户持仓股票数据中添加持股数量 
+        const userPortfolio = {
+    gainers: [
+        { symbol: 'AAPL', name: 'Apple Inc', shares: 100 },
+        { symbol: 'FE', name: 'Firstenergy Corp', shares: 200 },
+        { symbol: 'DUK', name: 'Duke Energy Corp', shares: 150 },
+        { symbol: 'NU', name: 'Northeast Utilities', shares: 300 },
+        { symbol: 'ESI', name: 'ITT Educational Services Inc', shares: 50 }
+    ],
+    losers: [
+        { symbol: 'HTSI', name: 'Harris Teeter Supermarkets Inc', shares: 80 },
+        { symbol: 'GPOR', name: 'Gulfport Energy Corp', shares: 120 },
+        { symbol: 'MSFT', name: 'Microsoft Corp', shares: 90 },
+        { symbol: 'WFC', name: 'Wells Fargo & Co', shares: 70 },
+        { symbol: 'EMN', name: 'Eastman Chemical Co', shares: 60 }
+    ]
+};
+
+        // 添加股票到持仓
+        function addToPortfolio() {
+    const tickerInput = document.getElementById('ticker-input');
+    const ticker = tickerInput.value.toUpperCase();
+    
+    if (!ticker) {
+        document.getElementById('stock-error').textContent = "请输入股票代码";
+        return;
+    }
+    
+    // 检查是否已经在持仓中
+    const existingStock = [...userPortfolio.gainers, ...userPortfolio.losers].find(
+        stock => stock.symbol === ticker
+    );
+    
+    if (existingStock) {
+        document.getElementById('stock-error').textContent = `${ticker} 已经在您的持仓中`;
+        return;
+    }
+    
+    // 显示加载状态
+    const errorMsg = document.getElementById('stock-error');
+    errorMsg.textContent = `添加 ${ticker} 到持仓中...`;
+    
+    // 获取股票数据
+    getStockData(ticker)
+        .then(data => {
+            errorMsg.textContent = "";
+            
+            // 创建新股票对象
+            const newStock = {
+                symbol: ticker,
+                name: ticker, // 默认使用代码作为名称，可以后续完善
+                shares: 100, // 默认100股
+                data: data
+            };
+            
+            // 根据涨跌添加到不同列表
+            if (data.regularMarketChangePercent >= 0) {
+                userPortfolio.gainers.push(newStock);
+            } else {
+                userPortfolio.losers.push(newStock);
+            }
+            
+            // 更新持仓显示
+            updatePortfolioDisplay();
+            
+            // 更新市场数据
+            fetchMarketData();
+            
+            tickerInput.value = '';
+        })
+        .catch(error => {
+            errorMsg.textContent = `添加股票失败: ${error.message}`;
+        });
+}
+
+        // 从持仓中移除股票
+        function removeFromPortfolio(symbol) {
+    // 从gainers中移除
+    userPortfolio.gainers = userPortfolio.gainers.filter(
+        stock => stock.symbol !== symbol
+    );
+    
+    // 从losers中移除
+    userPortfolio.losers = userPortfolio.losers.filter(
+        stock => stock.symbol !== symbol
+    );
+    
+    // 更新持仓显示
+    updatePortfolioDisplay();
+    
+    // 更新市场数据
+    fetchMarketData();
+}
+
+        // 更新持仓显示
+        function updatePortfolioDisplay() {
+    const container = document.querySelector('.accounts .account-items');
+    
+    // 清空现有显示
+    container.innerHTML = '';
+    
+    // 合并所有持仓股票并按价值排序
+    const allStocks = [...userPortfolio.gainers, ...userPortfolio.losers];
+    
+    // 计算每只股票的总价值并排序
+    const stocksWithValue = allStocks.map(stock => {
+        const value = stock.shares * (stock.data?.regularMarketPrice || 0);
+        return { ...stock, value };
+    }).sort((a, b) => b.value - a.value);
+    
+    // 添加每只股票到显示
+    stocksWithValue.forEach(stock => {
+        const value = stock.shares * (stock.data?.regularMarketPrice || 0);
+        const changePercent = stock.data?.regularMarketChangePercent || 0;
+        const changeClass = changePercent >= 0 ? 'positive' : 'negative';
+        const changeSign = changePercent >= 0 ? '+' : '';
+        
+        const stockElement = document.createElement('div');
+        stockElement.className = 'account-item';
+        stockElement.innerHTML = `
+            <div class="account-item-header">
+                <div>
+                    <div class="account-name">${stock.name}</div>
+                    <div class="account-type">${stock.shares} 股</div>
+                </div>
+                <div class="account-balance">$${value.toFixed(2)}</div>
+            </div>
+            <div class="account-time">
+                <span class="${changeClass}">
+                    ${changeSign}${changePercent.toFixed(2)}%
+                </span>
+                <button class="sell-btn" data-symbol="${stock.symbol}" style="float: right; background: var(--negative); color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer;">
+                    卖出
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(stockElement);
+    });
+    
+    // 添加卖出按钮事件
+    document.querySelectorAll('.sell-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const symbol = this.getAttribute('data-symbol');
+            removeFromPortfolio(symbol);
+        });
+    });
+}
+
+        // 在DOMContentLoaded中添加事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+    // ...其他代码...
+    
+    // 绑定"加入持仓"按钮事件
+    document.getElementById('add-to-portfolio').addEventListener('click', addToPortfolio);
+    
+    // 初始化持仓显示
+    updatePortfolioDisplay();
+});
+
+        // 修改fetchMarketData函数以更新持仓显示
+        function fetchMarketData() {
+    // 获取市场指数数据
+    const indicesPromises = marketIndices.map(index => 
+        getStockData(index.symbol).then(data => {
+            return { ...index, data };
+        })
+    );
+    
+    // 获取用户持仓股票数据
+    const gainersPromises = userPortfolio.gainers.map(stock => 
+        getStockData(stock.symbol).then(data => {
+            return { ...stock, data };
+        })
+    );
+    
+    const losersPromises = userPortfolio.losers.map(stock => 
+        getStockData(stock.symbol).then(data => {
+            return { ...stock, data };
+        })
+    );
+    
+    // 等待所有数据加载完成
+    Promise.all([...indicesPromises, ...gainersPromises, ...losersPromises])
+        .then(data => {
+            updateMarketIndices(data.filter(item => marketIndices.some(idx => idx.symbol === item.symbol)));
+            
+            // 更新用户持仓数据
+            const updatedGainers = data.filter(item => 
+                userPortfolio.gainers.some(g => g.symbol === item.symbol)
+            );
+            const updatedLosers = data.filter(item => 
+                userPortfolio.losers.some(l => l.symbol === item.symbol)
+            );
+            
+            // 更新持仓显示
+            updatePortfolioDisplay();
+            
+            // 更新涨跌榜显示
+            updatePortfolioStocks(updatedGainers, updatedLosers);
+        })
+        .catch(error => {
+            document.getElementById('api-error').textContent = "Error fetching stock data: " + error.message;
+        });
+}
+        
         // 准备图表数据
         function prepareChartData(apiData) {
             // 提取时间戳和收盘价
