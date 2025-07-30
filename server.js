@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./db');
+const dashboardRouter = require('./routes/dashboard');
 
 const app = express();
 const PORT = 5000;
@@ -25,6 +26,7 @@ app.use('/api/portfolio', require('./routes/portfolios'));
 app.use('/api/stocks', require('./routes/stocks'));
 app.use('/api/trades', require('./routes/trades'));
 app.use('/api/stockInfo', require('./routes/stockInfo'));
+app.use('/api/dashboard', dashboardRouter);
 
 // 设置初始现金
 // 设置初始现金
