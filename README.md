@@ -56,5 +56,5 @@ node ./utils/updateStockInfo.js
 node server.js
 ```
 
-Access the application at:```text
+Access the application at:```
 https://localhost:5000/index.html```
