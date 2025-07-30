@@ -246,11 +246,216 @@
             grid-column: 3;
         }
 
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .card-title i {
+            margin-right: 8px;
+            color: #4CAF50;
+        }
+        
+        .api-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .symbol-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .add-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .error-message {
+            color: #ff0000;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .stock-chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        
         .indices {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             margin-top: 16px;
+        }
+
+        .indices {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+        
+        .api-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .symbol-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .add-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .add-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .error-message {
+            color: #F44336;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .stock-chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        #chart-wrapper {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .index {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .index-name {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .index-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .holdings-change {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .holdings-change span:last-child {
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        
+        .positive {
+            color: #00aa00;
+        }
+        .negative {
+            color: #ff0000;
+        }
+        .error-message {
+            color: #ff0000;
+            padding: 10px;
+            text-align: center;
         }
 
         .index {
@@ -286,6 +491,21 @@
             gap: 4px;
         }
 
+        /* 新增样式 */
+        #chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        #chart-wrapper .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+        }
+        
         .movers-container {
             margin-top: 24px;
         }
@@ -434,7 +654,17 @@
             margin-top: 20px;
         }
 
-
+        .index-value .positive {
+            color: #00aa00;
+        }
+        .index-value .negative {
+            color: #ff0000;
+        }
+        .error-message {
+            color: #ff0000;
+            padding: 10px;
+            text-align: center;
+        }
 
         /* 加载动画样式 */
 
@@ -521,7 +751,9 @@
                 </div>
                 <div id="stock-error" class="error-message"></div>
                 <div class="stock-chart-container">
-                    <canvas id="stock-chart"></canvas>
+                    <div id="chart-wrapper">
+                        <canvas id="stock-chart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -589,46 +821,8 @@
                     </div>
                 </div>
 
-                <div class="indices">
-                    <div class="index">
-                        <div>
-                            <div class="index-name">S&P 500</div>
-                            <div id="sp500-value" class="index-value">
-                                <span class="loader"></span>
-                            </div>
-                        </div>
-                        <div class="holdings-change">
-                            <span>YOUR HOLDINGS</span>
-                            <span id="sp500-holdings">0.00%</span>
-                        </div>
-                    </div>
-
-                    <div class="index">
-                        <div>
-                            <div class="index-name">DOW JONES</div>
-                            <div id="dowjones-value" class="index-value">
-                                <span class="loader"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="index">
-                        <div>
-                            <div class="index-name">NASDAQ</div>
-                            <div id="nasdaq-value" class="index-value">
-                                <span class="loader"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="index">
-                        <div>
-                            <div class="index-name">10-YR BOND</div>
-                            <div id="bond10yr-value" class="index-value">
-                                <span class="loader"></span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="indices" id="stock-indices">
+                    <!-- 这里将通过JavaScript动态填充股票数据 -->
                 </div>
 
                 <div class="movers-container">
@@ -692,7 +886,174 @@
         </div>
     </div>
 
+    <!-- 引入Chart.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+
+        // 全局图表实例
+let stockChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取DOM元素
+    const searchBtn = document.getElementById('search-btn');
+    const tickerInput = document.getElementById('ticker-input');
+    const errorDisplay = document.getElementById('stock-error');
+    const chartWrapper = document.getElementById('chart-wrapper');
+    
+    // 查询按钮点击事件
+    searchBtn.addEventListener('click', fetchStockDataHandler);
+    
+    // 输入框回车事件
+    tickerInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            fetchStockDataHandler();
+        }
+    });
+    
+    // 查询处理函数
+    function fetchStockDataHandler() {
+        const stockSymbol = tickerInput.value.trim().toUpperCase();
+        
+        if (!stockSymbol) {
+            showError('请输入股票代码');
+            return;
+        }
+        
+        fetchStockData(stockSymbol);
+    }
+    
+    // 获取股票数据
+    async function fetchStockData(symbol) {
+        try {
+            // 显示加载状态
+            showLoading();
+            clearError();
+            
+            const response = await fetch(`http://localhost:5000/api/stockInfo/${symbol}`);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || '获取股票数据失败');
+            }
+            
+            const stockData = await response.json();
+            console.log('股票数据:', stockData);
+            
+            // 验证数据格式
+            if (!stockData.history_price || !Array.isArray(stockData.history_price)) {
+                throw new Error('无效的股票数据格式');
+            }
+            
+            renderStockChart(stockData);
+        } catch (error) {
+            console.error('获取股票数据失败:', error);
+            showError(error.message);
+            clearChart();
+        }
+    }
+    
+    // 渲染股票图表
+    function renderStockChart(stockData) {
+        // 准备数据
+        const labels = stockData.history_price.map(item => item.date);
+        const prices = stockData.history_price.map(item => item.price);
+        const currentPrice = parseFloat(stockData.current_price);
+        
+        // 计算涨跌幅
+        const firstPrice = prices[0];
+        const changePercent = ((currentPrice - firstPrice) / firstPrice * 100).toFixed(2);
+        const isPositive = changePercent >= 0;
+        
+        // 清除旧图表
+        clearChart();
+        
+        // 创建新图表
+        const ctx = document.getElementById('stock-chart').getContext('2d');
+        stockChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `${stockData.stock_name} (${stockData.stock_code})`,
+                    data: prices,
+                    borderColor: isPositive ? '#4CAF50' : '#F44336',
+                    backgroundColor: isPositive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${stockData.stock_name} (${stockData.stock_code}) - 当前价: $${currentPrice.toFixed(2)} (${isPositive ? '+' : ''}${changePercent}%)`,
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `$${context.raw.toFixed(2)}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return `$${value.toFixed(2)}`;
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 显示加载状态
+    function showLoading() {
+        clearChart();
+        chartWrapper.innerHTML = '<div class="loading">加载数据中...</div>';
+    }
+    
+    // 清除图表
+    function clearChart() {
+        if (stockChart) {
+            stockChart.destroy();
+            stockChart = null;
+        }
+        chartWrapper.innerHTML = '<canvas id="stock-chart"></canvas>';
+    }
+    
+    // 显示错误信息
+    function showError(message) {
+        errorDisplay.textContent = message;
+        errorDisplay.style.display = 'block';
+    }
+    
+    // 清除错误信息
+    function clearError() {
+        errorDisplay.textContent = '';
+        errorDisplay.style.display = 'none';
+    }
+});
 
         // 市场指数
         const marketIndices = [
@@ -1381,6 +1742,14 @@
             });
         }
 
+        function clearChart() {
+            if (stockChart) {
+                stockChart.destroy();
+                stockChart = null;
+            }
+            chartWrapper.innerHTML = '<canvas id="stock-chart"></canvas>';
+        }
+
         // 添加股票到列表
         function addStock() {
             const symbolInput = document.getElementById('symbol-input');
@@ -1424,6 +1793,69 @@
                     errorMsg.className = 'error-message';
                 });
         }
+
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取股票数据
+            fetch('http://localhost:5000/api/stockInfo/random-changes')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应不正常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API返回数据:', data); // 调试用
+                    const container = document.getElementById('stock-indices');
+                    
+                    // 清空容器
+                    container.innerHTML = '';
+                    
+                    // 检查数据是否有效
+                    if (!data || !Array.isArray(data) || data.length === 0) {
+                        throw new Error('无效的股票数据');
+                    }
+                    
+                    // 为每个股票创建显示元素
+                    data.forEach((stock, index) => {
+                        const changePercent = parseFloat(stock.change_percent);
+                        const currentPrice = parseFloat(stock.current_price);
+                        
+                        // 验证数据
+                        if (isNaN(changePercent) || isNaN(currentPrice)) {
+                            console.error('无效的股票数据:', stock);
+                            return;
+                        }
+                        
+                        const changeClass = changePercent >= 0 ? 'positive' : 'negative';
+                        const changeSymbol = changePercent >= 0 ? '+' : '';
+                        
+                        const stockElement = document.createElement('div');
+                        stockElement.className = 'index';
+                        
+                        stockElement.innerHTML = `
+                            <div>
+                                <div class="index-name">${stock.stock_name} (${stock.stock_code})</div>
+                                <div class="index-value">
+                                    ${currentPrice.toFixed(2)}
+                                    <span class="${changeClass}">${changeSymbol}${changePercent.toFixed(2)}%</span>
+                                </div>
+                            </div>
+                            ${index === 0 ? `
+                           
+                            ` : ''}
+                        `;
+                        
+                        container.appendChild(stockElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('获取股票数据失败:', error);
+                    document.getElementById('stock-indices').innerHTML = `
+                        <div class="error-message">无法加载股票数据: ${error.message}</div>
+                    `;
+                });
+        });
     </script>
 </body>
 </html>
