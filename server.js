@@ -25,6 +25,7 @@ app.use(bodyParser.json());
 app.use('/api/portfolio', require('./routes/portfolios'));
 app.use('/api/stocks', require('./routes/stocks'));
 app.use('/api/trades', require('./routes/trades'));
+app.use('/api/stockInfo', require('./routes/stockInfo'));
 app.use('/api/dashboard', dashboardRouter);
 
 // 设置初始现金
