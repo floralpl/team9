@@ -827,39 +827,39 @@
 
                 <div class="movers-container">
                     <div class="mover-section">
-                        <div class="mover-title positive">
-                            <i class="fas fa-arrow-trend-up"></i> YOUR GAINERS
+                      <div class="mover-title positive">
+                        <i class="fas fa-arrow-trend-up"></i> YOUR GAINERS
+                      </div>
+                      <div id="gainers-container">
+                        <div class="mover-item">
+                          <div class="mover-name">
+                            <span class="loader"></span>
+                            <span>Loading stocks...</span>
+                          </div>
+                          <div class="mover-value">
+                            <span class="loader"></span>
+                          </div>
                         </div>
-                        <div id="gainers-container">
-                            <div class="mover-item">
-                                <div class="mover-name">
-                                    <span class="loader"></span>
-                                    <span>Loading stocks...</span>
-                                </div>
-                                <div class="mover-value">
-                                    <span class="loader"></span>
-                                </div>
-                            </div>
-                        </div>
+                      </div>
                     </div>
-
+                  
                     <div class="mover-section">
-                        <div class="mover-title negative">
-                            <i class="fas fa-arrow-trend-down"></i> YOUR LOSERS
+                      <div class="mover-title negative">
+                        <i class="fas fa-arrow-trend-down"></i> YOUR LOSERS
+                      </div>
+                      <div id="losers-container">
+                        <div class="mover-item">
+                          <div class="mover-name">
+                            <span class="loader"></span>
+                            <span>Loading stocks...</span>
+                          </div>
+                          <div class="mover-value">
+                            <span class="loader"></span>
+                          </div>
                         </div>
-                        <div id="losers-container">
-                            <div class="mover-item">
-                                <div class="mover-name">
-                                    <span class="loader"></span>
-                                    <span>Loading stocks...</span>
-                                </div>
-                                <div class="mover-value">
-                                    <span class="loader"></span>
-                                </div>
-                            </div>
-                        </div>
+                      </div>
                     </div>
-                </div>
+                  </div>
 
                 <!-- 搜索股票界面 -->
                 <div class="api-controls">
@@ -1054,6 +1054,51 @@ document.addEventListener('DOMContentLoaded', function() {
         errorDisplay.style.display = 'none';
     }
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const gainersContainer = document.getElementById('gainers-container');
+    const losersContainer = document.getElementById('losers-container');
+  
+    const renderStocks = (container, data, isGainer) => {
+      container.innerHTML = ''; // 清空加载中内容
+  
+      data.forEach(stock => {
+        const item = document.createElement('div');
+        item.className = 'mover-item';
+  
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'mover-name';
+        nameDiv.textContent = stock.stock_name;
+  
+        const valueDiv = document.createElement('div');
+        valueDiv.className = 'mover-value';
+        valueDiv.style.color = isGainer ? 'green' : 'red';
+        valueDiv.textContent = `${parseFloat(stock.change_percent).toFixed(2)}%`;
+  
+        item.appendChild(nameDiv);
+        item.appendChild(valueDiv);
+  
+        container.appendChild(item);
+      });
+    };
+  
+    try {
+      const [gainersRes, losersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/stockInfo/holding-up'),
+        fetch('http://localhost:5000/api/stockInfo/holding-down')
+      ]);
+  
+      const gainersData = await gainersRes.json();
+      const losersData = await losersRes.json();
+  
+      renderStocks(gainersContainer, gainersData, true);
+      renderStocks(losersContainer, losersData, false);
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      gainersContainer.innerHTML = '<div class="mover-item">Failed to load data</div>';
+      losersContainer.innerHTML = '<div class="mover-item">Failed to load data</div>';
+    }
+  });
 
         // 市场指数
         const marketIndices = [
