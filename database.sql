@@ -26,3 +26,73 @@ CREATE TABLE trade_record (
     amount DECIMAL(10, 2) NOT NULL COMMENT '金额',
     trade_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '交易时间'
 ) COMMENT='交易记录表';
+
+ALTER TABLE stock_info
+ADD COLUMN last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
+-- 创建现金账户视图
+CREATE VIEW cash_accounts AS
+SELECT 
+  'Fidelity Cash' AS name,
+  (SELECT COALESCE(SUM(amount), 0) FROM trade_record 
+   WHERE trade_detail LIKE 'Fidelity Cash%') AS balance,
+  'Cash Management' AS type,
+  MAX(trade_time) AS updated
+FROM trade_record
+
+UNION ALL
+
+SELECT 
+  'Wells Fargo' AS name,
+  (SELECT COALESCE(SUM(amount), 0) FROM trade_record 
+   WHERE trade_detail LIKE 'Wells Fargo%' AND trade_detail LIKE '%Checking%') AS balance,
+  'Checking' AS type,
+  MAX(trade_time) AS updated
+FROM trade_record
+
+UNION ALL
+
+SELECT 
+  'Wells Fargo' AS name,
+  (SELECT COALESCE(SUM(amount), 0) FROM trade_record 
+   WHERE trade_detail LIKE 'Wells Fargo%' AND trade_detail LIKE '%Savings%') AS balance,
+  'Savings' AS type,
+  MAX(trade_time) AS updated
+FROM trade_record;
+
+-- 创建投资账户视图
+CREATE VIEW investment_accounts AS
+SELECT 
+  'Benneke Fabricators' AS name,
+  (SELECT COALESCE(SUM(p.quantity * s.current_price), 0) 
+   FROM portfolio p
+   JOIN stock_info s ON p.stock_code = s.stock_code
+   WHERE s.stock_name LIKE 'Benneke%') AS value,
+  'Skyyer White 401k' AS type,
+  MAX(s.last_updated) AS updated
+FROM stock_info s
+
+UNION ALL
+
+SELECT 
+  'Madrigal Electromotive' AS name,
+  (SELECT COALESCE(SUM(p.quantity * s.current_price), 0) 
+   FROM portfolio p
+   JOIN stock_info s ON p.stock_code = s.stock_code
+   WHERE s.stock_name LIKE 'Madrigal%') AS value,
+  'Water White 401k' AS type,
+  MAX(s.last_updated) AS updated
+FROM stock_info s
+
+UNION ALL
+
+SELECT 
+  'Pershing' AS name,
+  (SELECT COALESCE(SUM(p.quantity * s.current_price), 0) 
+   FROM portfolio p
+   JOIN stock_info s ON p.stock_code = s.stock_code
+   WHERE s.stock_name LIKE 'Pershing%') AS value,
+  'IRA 1' AS type,
+  MAX(s.last_updated) AS updated
+FROM stock_info s;
+

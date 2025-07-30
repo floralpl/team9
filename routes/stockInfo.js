@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const StockInfoService = require('../service/stockInfoService');
 
-// ⚠️ 示例函数，实际应从数据库查询投资表
-async function getStocks() {
-  return ['AAPL', 'GOOG', 'TSLA', 'BABA'];
-}
 
 // 计算涨跌幅（%）
 function calculateChangePercent(historyPriceJson, currentPrice) {
@@ -57,7 +53,7 @@ router.get('/random-changes', async (req, res) => {
  */
 router.get('/holding-up', async (req, res) => {
   try {
-    const stockCodes = await getStocks();
+    const stockCodes = await StockInfoService.getStocks();
     const result = [];
 
     for (const code of stockCodes) {
@@ -65,9 +61,9 @@ router.get('/holding-up', async (req, res) => {
       let history = [];
   
         try {
-          history = Array.isArray(stock.history_price)
-            ? stock.history_price
-            : JSON.parse(stock.history_price || '[]');
+            history = Array.isArray(info.history_price)
+            ? info.history_price
+            : JSON.parse(info.history_price || '[]');
         } catch (e) {
           console.warn(`Failed to parse history_price for ${stock.stock_code}:`, e);
         }
@@ -94,7 +90,7 @@ router.get('/holding-up', async (req, res) => {
  */
 router.get('/holding-down', async (req, res) => {
   try {
-    const stockCodes = await getStocks();
+    const stockCodes = await StockInfoService.getStocks();
     const result = [];
 
     for (const code of stockCodes) {
@@ -102,9 +98,9 @@ router.get('/holding-down', async (req, res) => {
       let history = [];
   
         try {
-          history = Array.isArray(stock.history_price)
-            ? stock.history_price
-            : JSON.parse(stock.history_price || '[]');
+            history = Array.isArray(info.history_price)
+            ? info.history_price
+            : JSON.parse(info.history_price || '[]');
         } catch (e) {
           console.warn(`Failed to parse history_price for ${stock.stock_code}:`, e);
         }
@@ -166,7 +162,15 @@ router.get('/:code/price', async (req, res) => {
       return res.json({ price: info.current_price });
     }
 
-    const history = JSON.parse(info.history_price || '[]');
+    let history = [];
+  
+    try {
+        history = Array.isArray(info.history_price)
+        ? info.history_price
+        : JSON.parse(info.history_price || '[]');
+    } catch (e) {
+      console.warn(`Failed to parse history_price for ${stock.stock_code}:`, e);
+    }
     const entry = history.find(item => item.date === date);
 
     if (entry) {

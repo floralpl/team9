@@ -3,6 +3,20 @@
 const pool = require('../db'); // 引入数据库连接池
 
 const StockInfoService = {
+
+
+    /**
+   * 从投资表中获取所有持有的股票代码
+   * @returns {Promise<Array<string>>}
+   */
+  async getStocks() {
+    const [rows] = await pool.query(
+      'SELECT stock_code FROM portfolio'
+    );
+    return rows.map(row => row.stock_code);
+  },
+
+
   /**
    * 根据股票代码查询所有信息
    * @param {string} stockCode
