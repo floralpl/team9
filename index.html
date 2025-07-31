@@ -880,7 +880,7 @@ input:focus:invalid {
                 </div>
                 <div class="api-controls">
                     <input type="text" id="ticker-input" class="symbol-input" placeholder="Enter stock symbol (e.g. TSLA)">
-                    <button id="search-btn" class="add-btn">S</button>
+                    <button id="search-btn" class="add-btn">Search</button>
                     <button id="add-to-portfolio" class="add-btn">Add to Holdings</button>
                 </div>
                 <div id="stock-error" class="error-message"></div>
@@ -894,7 +894,9 @@ input:focus:invalid {
             <!-- Net Worth现在放在股票价格走势下面 -->
             <div class="card">
                 <div class="card-header">
-                  <div class="card-title">NET WORTH</div>
+                  <div class="card-title">
+                    NET WORTH
+                  </div>
                   <div class="timeframe">
                     <span class="active-time">LAST 15 DAYS</span>
                   </div>
@@ -902,10 +904,7 @@ input:focus:invalid {
               
                 <div class="net-worth">
                   <div>
-                    <div class="net-worth-value" id="net-worth-value">$--</div>
-                    <div class="value-change" id="value-change">
-                      <!-- 会动态填充 -->
-                    </div>
+                    <div id="net-worth-value" class="net-worth-value">$0.00</div>
                   </div>
                 </div>
               
@@ -1045,6 +1044,7 @@ input:focus:invalid {
 
     <!-- 引入Chart.js库 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script>
 
         // 全局图表实例
@@ -1212,70 +1212,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-async function loadNetWorthChart() {
-    try {
-      const res = await fetch('http://localhost:5000/api/trades/net-assets');
-      const data = await res.json();
-
-      const labels = data.map(item => item.date);
-      const netAssets = data.map(item => item.cumulative_net_asset);
-
-      // 获取最后两天的值用于展示数值变化
-      const todayValue = netAssets[netAssets.length - 1];
-      const yesterdayValue = netAssets[netAssets.length - 2];
-
-      // 更新净资产主数值
-      document.getElementById('net-worth-value').textContent =
-        '$' + todayValue.toLocaleString(undefined, { minimumFractionDigits: 2 });
-
-      // 计算变化并更新 UI
-      const change = todayValue - yesterdayValue;
-      const changeText = `${change >= 0 ? '↑' : '↓'} $${Math.abs(change).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-      const changeClass = change >= 0 ? 'change-positive' : 'change-negative';
-
-      document.getElementById('value-change').innerHTML = `
-        <span class="${changeClass}">${changeText}</span>
-      `;
-
-      // 绘制 Chart.js 折线图
-      const ctx = document.getElementById('net-worth-chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Net Worth',
-            data: netAssets,
-            borderColor: '#4caf50',
-            backgroundColor: 'rgba(76, 175, 80, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 3,
-            pointBackgroundColor: '#4caf50',
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              beginAtZero: false,
-              ticks: {
-                callback: value => '$' + value.toLocaleString()
-              }
-            }
-          },
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('加载净资产数据失败:', error);
-      document.getElementById('net-worth-value').textContent = '加载失败';
-    }
-  }
-  loadNetWorthChart();
+//
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1338,6 +1275,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // 加载股票数据
             fetchMarketData();
+
+            fetchNetWorthData();
             
             // 绑定添加股票按钮事件
             document.getElementById('add-symbol').addEventListener('click', addStock);
@@ -1363,131 +1302,204 @@ document.addEventListener('DOMContentLoaded', async () => {
             createStockChart();
         });
 
+        async function fetchNetWorthData() {
+            try {
+                // 显示加载状态
+                document.getElementById('net-worth-value').textContent = 'Loading...';
+                
+                const response = await fetch('http://localhost:5000/api/trades/net-assets');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch net worth data');
+                }
+                
+                const netAssetsData = await response.json();
+                
+                // 更新净资产总值（显示最后一天的累计净资产）
+                const latestNetWorth = netAssetsData[netAssetsData.length - 1].cumulative_net_asset;
+                document.getElementById('net-worth-value').textContent = `$${latestNetWorth.toFixed(2)}`;
+                
+                // 准备图表数据
+                const labels = netAssetsData.map(item => {
+                    // 将日期格式从 "2025-07-17" 转换为 "07-17"
+                    const dateParts = item.date.split('-');
+                    return `${dateParts[1]}-${dateParts[2]}`;
+                });
+                
+                const data = netAssetsData.map(item => item.cumulative_net_asset);
+                
+                // 创建图表
+                const netWorthCtx = document.getElementById('net-worth-chart').getContext('2d');
+                new Chart(netWorthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Net Worth',
+                            data: data,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: {
+                                    size: 14
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        return `$${context.parsed.y.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Failed to load net worth data:', error);
+                document.getElementById('net-worth-value').textContent = '$0.00';
+                document.getElementById('net-worth-chart').innerHTML = `
+                    <div class="error-message">Unable to load net worth data: ${error.message}</div>
+                `;
+            }
+        }
+
         // 创建图表
         function createCharts() {
-            // 净值走势图
-            const netWorthCtx = document.getElementById('net-worth-chart').getContext('2d');
-            new Chart(netWorthCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Net Worth',
-                        data: [2115, 2180, 2220, 2250, 2300, 2310, 2317],
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleFont: {
-                                size: 14
-                            },
-                            bodyFont: {
-                                size: 13
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        }
+            // 从后端API获取数据
+            fetch('http://localhost:5000/api/trades/summary')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                }
-            });
-
-            // 收入环形图
-            const incomeCtx = document.getElementById('income-chart').getContext('2d');
-            new Chart(incomeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Salary', 'Dividends', 'Rental', 'Other'],
-                    datasets: [{
-                        data: [75, 15, 8, 2],
-                        backgroundColor: [
-                            '#1d4ed8',
-                            '#3b82f6',
-                            '#93c5fd',
-                            '#bfdbfe'
-                        ],
-                        borderWidth: 0,
-                        cutout: '80%'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+                    return response.json();
+                })
+                .then(data => {
+                    // 更新收入图表中间显示的总收入
+                    document.querySelector('.flow-income .flow-main-value').textContent = `$${data.income.total.toFixed(2)}`;
+                    
+                    // 更新支出图表中间显示的总支出
+                    document.querySelector('.flow-spending .flow-main-value').textContent = `$${data.expenditure.toFixed(2)}`;
+                    
+                    // 创建收入环形图
+                    const incomeCtx = document.getElementById('income-chart').getContext('2d');
+                    new Chart(incomeCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Bank', 'Stock'],
+                            datasets: [{
+                                data: [data.income.bank, data.income.stock],
+                                backgroundColor: [
+                                    '#3b82f6', // bank 颜色
+                                    '#10b981'  // stock 颜色
+                                ],
+                                borderWidth: 0,
+                                cutout: '80%'
+                            }]
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            bodyFont: {
-                                size: 13
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    bodyFont: {
+                                        size: 13
+                                    },
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed || 0;
+                                            return `${label}: $${value.toFixed(2)}`;
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                }
-            });
-
-            // 支出环形图
-            const spendingCtx = document.getElementById('spending-chart').getContext('2d');
-            new Chart(spendingCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Housing', 'Transportation', 'Food', 'Entertainment', 'Other'],
-                    datasets: [{
-                        data: [40, 25, 20, 10, 5],
-                        backgroundColor: [
-                            '#f97316',
-                            '#f59e0b',
-                            '#ec4899',
-                            '#f43f5e',
-                            '#fbcfe8'
-                        ],
-                        borderWidth: 0,
-                        cutout: '80%'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+                    });
+                    
+                    // 创建支出环形图
+                    const spendingCtx = document.getElementById('spending-chart').getContext('2d');
+                    new Chart(spendingCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Expenditure'],
+                            datasets: [{
+                                data: [data.expenditure],
+                                backgroundColor: ['#f97316'],
+                                borderWidth: 0,
+                                cutout: '80%'
+                            }]
                         },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            bodyFont: {
-                                size: 13
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                    bodyFont: {
+                                        size: 13
+                                    },
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Total Expenditure: $${context.parsed.toFixed(2)}`;
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                }
-            });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching summary data:', error);
+                    // 错误处理：显示默认数据
+                    document.querySelector('.flow-income .flow-main-value').textContent = '$0.00';
+                    document.querySelector('.flow-spending .flow-main-value').textContent = '$0.00';
+                    createDefaultCharts();
+                });
         }
+
 
         // 获取股票数据并创建图表
         async function createStockChart() {
