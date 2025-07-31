@@ -1051,6 +1051,77 @@ input:focus:invalid {
         // 全局图表实例
 let stockChart = null;
 
+//获取持仓股票
+document.addEventListener("DOMContentLoaded", function () {
+    const portfolioList = document.getElementById("portfolio-list");
+
+    fetch("http://localhost:5000/api/portfolio/overview")
+        .then(response => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.json();
+        })
+        .then(data => {
+            portfolioList.innerHTML = "";
+
+            // 1. 展示 stockValue
+            const stockValueDiv = document.createElement("div");
+            stockValueDiv.classList.add("account-item", "stock-value");
+            stockValueDiv.innerHTML = `
+                <strong>Total Stock Value:</strong> $${Number(data.stockValue).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            `;
+            portfolioList.appendChild(stockValueDiv);
+
+            // 2. 展示每只股票
+            if (data.holdings && data.holdings.length > 0) {
+                data.holdings.forEach(stock => {
+                    const stockItem = document.createElement("div");
+                    stockItem.classList.add("account-item", "stock-item");
+                    stockItem.style.position = "relative"; // 让按钮可以固定在右下角
+
+                    stockItem.innerHTML = `
+                        <div class="stock-info">
+                            <strong>${stock.stock_code}</strong> (${stock.stock_name})
+                        </div>
+                        <div class="stock-details">
+                            Quantity: ${stock.quantity} &nbsp; | &nbsp; 
+                            Price: $${Number(stock.current_price).toFixed(2)}
+                        </div>
+                        <button 
+                            id="sell-${stock.stock_code}" 
+                            class="sell-btn"
+                            style="
+                                position: absolute;
+                                bottom: 5px;
+                                right: 5px;
+                                padding: 5px 10px;
+                                background-color: #ff4d4f;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">
+                            Sell
+                        </button>
+                    `;
+
+                    portfolioList.appendChild(stockItem);
+
+                    // 绑定 sell 按钮事件
+                    document.getElementById(`sell-${stock.stock_code}`).addEventListener("click", function () {
+                        alert(`Sell clicked for ${stock.stock_code}`);
+                        // 这里可以调用后端接口进行卖出操作
+                    });
+                });
+            } else {
+                portfolioList.innerHTML = `<div class="empty-portfolio">No holdings, please add stocks.</div>`;
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching portfolio data:", error);
+            portfolioList.innerHTML = `<div class="empty-portfolio">Failed to load data.</div>`;
+        });
+});
+
 //获取cash值
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -1557,18 +1628,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 在用户持仓股票数据中添加持股数量 
         const userPortfolio = {
     gainers: [
-        { symbol: 'AAPL', name: 'Apple Inc', shares: 100 },
-        { symbol: 'FE', name: 'Firstenergy Corp', shares: 200 },
-        { symbol: 'DUK', name: 'Duke Energy Corp', shares: 150 },
-        { symbol: 'NU', name: 'Northeast Utilities', shares: 300 },
-        { symbol: 'ESI', name: 'ITT Educational Services Inc', shares: 50 }
+        
     ],
     losers: [
-        { symbol: 'HTSI', name: 'Harris Teeter Supermarkets Inc', shares: 80 },
-        { symbol: 'GPOR', name: 'Gulfport Energy Corp', shares: 120 },
-        { symbol: 'MSFT', name: 'Microsoft Corp', shares: 90 },
-        { symbol: 'WFC', name: 'Wells Fargo & Co', shares: 70 },
-        { symbol: 'EMN', name: 'Eastman Chemical Co', shares: 60 }
+       
     ]
 };
 
@@ -2175,47 +2238,115 @@ async function fetchStockInfo(ticker) {
 }
 
 // 绑定"加入持仓"按钮事件
-document.getElementById('add-to-portfolio').addEventListener('click', async function() {
-    // 获取输入框中的股票代码
-    const tickerInput = document.getElementById('ticker-input');
-    const stockCode = tickerInput.value.trim();
-    
-    if (!stockCode) {
-        alert('Please enter a stock code');
-        return;
-    }
-    
-    // 检查是否已经查询过该股票
-    if (!currentStockInfo || currentStockInfo.stock_code !== stockCode) {
-        try {
-            // 如果没有查询过或查询的不是当前股票，则先获取股票信息
-            await fetchStockInfo(stockCode);
-        } catch (error) {
-            alert('Failed to obtain stock data, please enter the price manually');
-            // 继续显示弹窗，让用户可以手动输入价格
+document.addEventListener("DOMContentLoaded", function () {
+    const addStockBtn = document.getElementById('add-to-portfolio');
+    const addStockModal = document.getElementById('add-stock-modal');
+    const closeBtn = addStockModal.querySelector(".close");
+    const addStockForm = document.getElementById("add-stock-form");
+
+    // 点击按钮 → 打开弹窗
+    addStockBtn.addEventListener('click', async function () {
+        // 获取输入框中的股票代码
+        const tickerInput = document.getElementById('ticker-input');
+        const stockCode = tickerInput.value.trim();
+        
+        if (!stockCode) {
+            alert('Please enter a stock code');
+            return;
         }
-    }
-    
-    // 填充弹窗数据
-    document.getElementById('modal-stock-code').value = stockCode;
-    
-    // 设置价格（如果获取到了）
-    if (currentStockInfo && currentStockInfo.stock_code === stockCode) {
-        document.getElementById('modal-stock-price').value = currentStockInfo.current_price;
-    } else {
-        document.getElementById('modal-stock-price').value = '';
-    }
-    
-    // 设置当前日期
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    document.getElementById('modal-stock-date').value = formattedDate;
-    
-    // 显示弹窗
-    document.getElementById('add-stock-modal').style.display = 'block';
-    
-    // 聚焦到数量输入框
-    document.getElementById('modal-stock-quantity').focus();
+        
+        // 检查是否已经查询过该股票
+        if (!currentStockInfo || currentStockInfo.stock_code !== stockCode) {
+            try {
+                // 如果没有查询过或查询的不是当前股票，则先获取股票信息
+                await fetchStockInfo(stockCode);
+            } catch (error) {
+                alert('Failed to obtain stock data, please enter the price manually');
+                // 继续显示弹窗，让用户可以手动输入价格
+            }
+        }
+        
+        // 填充弹窗股票代码
+        document.getElementById('modal-stock-code').value = stockCode;
+        
+        // 自动填充价格（如果有）
+        if (currentStockInfo && currentStockInfo.stock_code === stockCode) {
+            document.getElementById('modal-stock-price').value = currentStockInfo.current_price;
+        } else {
+            document.getElementById('modal-stock-price').value = '';
+        }
+        
+        // 自动填充今天日期（仅显示，不传后端）
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('modal-stock-date').value = formattedDate;
+        
+        // 显示弹窗
+        addStockModal.style.display = 'block';
+        
+        // 聚焦数量输入框
+        document.getElementById('modal-stock-quantity').focus();
+    });
+
+    // 点击 × 关闭
+    closeBtn.addEventListener("click", function () {
+        addStockModal.style.display = "none";
+    });
+
+    // 点击背景关闭
+    window.addEventListener("click", function (e) {
+        if (e.target === addStockModal) {
+            addStockModal.style.display = "none";
+        }
+    });
+
+    // 表单提交 → 发送到后端
+    addStockForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const stock_code = document.getElementById("modal-stock-code").value.trim();
+        const quantity = parseInt(document.getElementById("modal-stock-quantity").value, 10);
+        const price = parseFloat(document.getElementById("modal-stock-price").value);
+
+        if (!stock_code || isNaN(quantity) || isNaN(price)) {
+            alert("Please fill in all required fields");
+            return;
+        }
+
+        const payload = {
+            stock_code,
+            quantity,
+            price
+        };
+
+        try {
+            const res = await fetch("http://localhost:5000/api/portfolio/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const result = await res.json();
+            alert("Added to portfolio successfully!");
+            console.log("Server response:", result);
+
+            // 关闭弹窗
+            addStockModal.style.display = 'none';
+
+            // 如果需要刷新持仓列表，可以调用
+            // loadPortfolio();
+
+        } catch (error) {
+            console.error("Request failed:", error);
+            alert("Failed to add, please try again.");
+        }
+    });
 });
 // 其他代码保持不变...
 // 关闭弹窗
@@ -2230,36 +2361,7 @@ window.addEventListener('click', function(event) {
     }
 });
 
-document.getElementById('add-stock-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const stockCode = document.getElementById('modal-stock-code').value;
-    const quantity = parseInt(document.getElementById('modal-stock-quantity').value);
-    const priceInput = document.getElementById('modal-stock-price');
-    const price = parseFloat(priceInput.value);
-    const date = document.getElementById('modal-stock-date').value;
-    
-    if (isNaN(price) || price <= 0) {
-        alert('Please enter a valid price');
-        priceInput.focus();
-        return;
-    }
-    
-    if (isNaN(quantity) || quantity <= 0) {
-        alert('Please enter a valid quantity');
-        document.getElementById('modal-stock-quantity').focus();
-        return;
-    }
-    
-    // 添加到左侧持仓列表
-    addToPortfolio(stockCode, quantity, price, date);
-    
-    // 关闭弹窗
-    document.getElementById('add-stock-modal').style.display = 'none';
-    
-    // 重置表单
-    this.reset();
-});
+
 // 添加到持仓列表的函数
 function addToPortfolio(code, quantity, price, date) {
     // 这里假设你有一个左侧持仓列表的容器，ID为portfolio-list

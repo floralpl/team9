@@ -41,7 +41,7 @@ router.get('/overview', async (req, res) => {
 
 // 添加股票到投资组合
 router.post('/add', async (req, res) => {
-  const { stock_code, quantity, price } = req.body;
+  const { stock_code, quantity, price} = req.body;
   
   try {
     // 添加交易记录（支出）
