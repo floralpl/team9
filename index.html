@@ -586,6 +586,127 @@
             font-size: 14px;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+          }
+          
+          .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+          }
+          
+          .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+          }
+          
+          .close:hover {
+            color: black;
+          }
+          
+          .form-group {
+            margin-bottom: 15px;
+          }
+          
+          .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+          }
+          
+          .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+
+          #portfolio-sidebar {
+            width: 250px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        
+        .portfolio-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stock-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .stock-code {
+            font-weight: bold;
+        }
+        
+        .purchase-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        /* 使输入框在无效时有视觉反馈 */
+input:invalid {
+    border-color: #ff6b6b;
+}
+
+input:focus:invalid {
+    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3);
+}
+
+.account-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 控制两个部分之间的间距 */
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+#portfolio-sidebar {
+    margin-top: 0; /* 确保没有额外的上边距干扰 */
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+}
+
         .add-btn {
             background-color: var(--primary);
             color: white;
@@ -719,17 +840,30 @@
         <div class="accounts">
             <div class="card">
                 <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-wallet"></i>
-                            CASH
+                    <div class="account-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-wallet"></i>
+                                    CASH
+                                </div>
+                                <div class="account-value" id="total-cash-balance">$0.00</div>
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    我的持仓
+                                </div>
+                            </div>
+                            
+                            <div id="portfolio-list" class="account-items">
+                                <!-- 持仓列表将在这里动态生成 -->
+                                <div class="empty-portfolio">暂无持仓，请添加股票</div>
+                            </div>
                         </div>
-                        <div class="account-value" id="total-cash-balance">$0.00</div>
-                    </div>
-
-                    <div class="account-items" id="cash-accounts-container">
-                        <!-- 这里将由JavaScript动态生成账户数据 -->
-                        <div class="loader"></div>
                     </div>
                 </div>
             </div>
@@ -885,6 +1019,32 @@
             </div>
         </div>
     </div>
+
+    <div id="add-stock-modal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h3>添加持仓</h3>
+          <form id="add-stock-form">
+            <div class="form-group">
+              <label>股票代码</label>
+              <input type="text" id="modal-stock-code" readonly>
+            </div>
+            <div class="form-group">
+              <label>数量</label>
+              <input type="number" id="modal-stock-quantity" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>购买价格</label>
+                <input type="number" id="modal-stock-price" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>购买日期</label>
+              <input type="date" id="modal-stock-date" readonly>
+            </div>
+            <button type="submit" class="add-btn">加入持仓</button>
+          </form>
+        </div>
+      </div>
 
     <!-- 引入Chart.js库 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1901,6 +2061,134 @@ document.addEventListener('DOMContentLoaded', async () => {
                     `;
                 });
         });
+
+        // 全局变量存储当前股票信息
+// 全局变量存储当前股票信息
+let currentStockInfo = null;
+
+// 获取股票信息时保存到全局变量
+async function fetchStockInfo(ticker) {
+    try {
+        const response = await fetch(`http://localhost:5000/api/stockInfo/${ticker}`);
+        if (!response.ok) {
+            throw new Error('股票未找到');
+        }
+        currentStockInfo = await response.json();
+        // 其他显示逻辑...
+    } catch (error) {
+        console.error('获取股票信息失败:', error);
+        alert(error.message);
+    }
+}
+
+// 绑定"加入持仓"按钮事件
+document.getElementById('add-to-portfolio').addEventListener('click', async function() {
+    // 获取输入框中的股票代码
+    const tickerInput = document.getElementById('ticker-input');
+    const stockCode = tickerInput.value.trim();
+    
+    if (!stockCode) {
+        alert('请输入股票代码');
+        return;
+    }
+    
+    // 检查是否已经查询过该股票
+    if (!currentStockInfo || currentStockInfo.stock_code !== stockCode) {
+        try {
+            // 如果没有查询过或查询的不是当前股票，则先获取股票信息
+            await fetchStockInfo(stockCode);
+        } catch (error) {
+            alert('获取股票价格失败，请手动输入价格');
+            // 继续显示弹窗，让用户可以手动输入价格
+        }
+    }
+    
+    // 填充弹窗数据
+    document.getElementById('modal-stock-code').value = stockCode;
+    
+    // 设置价格（如果获取到了）
+    if (currentStockInfo && currentStockInfo.stock_code === stockCode) {
+        document.getElementById('modal-stock-price').value = currentStockInfo.current_price;
+    } else {
+        document.getElementById('modal-stock-price').value = '';
+    }
+    
+    // 设置当前日期
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    document.getElementById('modal-stock-date').value = formattedDate;
+    
+    // 显示弹窗
+    document.getElementById('add-stock-modal').style.display = 'block';
+    
+    // 聚焦到数量输入框
+    document.getElementById('modal-stock-quantity').focus();
+});
+// 其他代码保持不变...
+// 关闭弹窗
+document.querySelector('.close').addEventListener('click', function() {
+    document.getElementById('add-stock-modal').style.display = 'none';
+});
+
+// 点击弹窗外区域关闭
+window.addEventListener('click', function(event) {
+    if (event.target === document.getElementById('add-stock-modal')) {
+        document.getElementById('add-stock-modal').style.display = 'none';
+    }
+});
+
+document.getElementById('add-stock-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const stockCode = document.getElementById('modal-stock-code').value;
+    const quantity = parseInt(document.getElementById('modal-stock-quantity').value);
+    const priceInput = document.getElementById('modal-stock-price');
+    const price = parseFloat(priceInput.value);
+    const date = document.getElementById('modal-stock-date').value;
+    
+    if (isNaN(price) || price <= 0) {
+        alert('请输入有效的购买价格');
+        priceInput.focus();
+        return;
+    }
+    
+    if (isNaN(quantity) || quantity <= 0) {
+        alert('请输入有效的数量');
+        document.getElementById('modal-stock-quantity').focus();
+        return;
+    }
+    
+    // 添加到左侧持仓列表
+    addToPortfolio(stockCode, quantity, price, date);
+    
+    // 关闭弹窗
+    document.getElementById('add-stock-modal').style.display = 'none';
+    
+    // 重置表单
+    this.reset();
+});
+// 添加到持仓列表的函数
+function addToPortfolio(code, quantity, price, date) {
+    // 这里假设你有一个左侧持仓列表的容器，ID为portfolio-list
+    const portfolioList = document.getElementById('portfolio-list');
+    
+    // 创建新的持仓项
+    const portfolioItem = document.createElement('div');
+    portfolioItem.className = 'portfolio-item';
+    portfolioItem.innerHTML = `
+        <div class="stock-info">
+            <span class="stock-code">${code}</span>
+            <span class="stock-quantity">${quantity}股</span>
+        </div>
+        <div class="purchase-info">
+            <span>买入价: $${price.toFixed(2)}</span>
+            <span>日期: ${date}</span>
+        </div>
+    `;
+    
+    // 添加到列表
+    portfolioList.appendChild(portfolioItem);
+}
     </script>
 </body>
 </html>
