@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人财务概览仪表板</title>
+    <title>Personal Finance Overview Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -855,13 +855,13 @@ input:focus:invalid {
                             <div class="card-header">
                                 <div class="card-title">
                                     <i class="fas fa-chart-line"></i>
-                                    我的持仓
+                                    My Holdings
                                 </div>
                             </div>
                             
                             <div id="portfolio-list" class="account-items">
                                 <!-- 持仓列表将在这里动态生成 -->
-                                <div class="empty-portfolio">暂无持仓，请添加股票</div>
+                                <div class="empty-portfolio">No holdings, please add stocks.</div>
                             </div>
                         </div>
                     </div>
@@ -875,13 +875,13 @@ input:focus:invalid {
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
-                        <i class="fas fa-chart-line"></i> 股票持仓分析
+                        <i class="fas fa-chart-line"></i> Stock Holdings Analysis
                     </div>
                 </div>
                 <div class="api-controls">
-                    <input type="text" id="ticker-input" class="symbol-input" placeholder="输入股票代码 (如: TSLA)">
-                    <button id="search-btn" class="add-btn">查询</button>
-                    <button id="add-to-portfolio" class="add-btn">加入持仓</button>
+                    <input type="text" id="ticker-input" class="symbol-input" placeholder="Enter stock symbol (e.g. TSLA)">
+                    <button id="search-btn" class="add-btn">S</button>
+                    <button id="add-to-portfolio" class="add-btn">Add to Holdings</button>
                 </div>
                 <div id="stock-error" class="error-message"></div>
                 <div class="stock-chart-container">
@@ -1023,25 +1023,25 @@ input:focus:invalid {
     <div id="add-stock-modal" class="modal">
         <div class="modal-content">
           <span class="close">&times;</span>
-          <h3>添加持仓</h3>
+          <h3>Add Holding</h3>
           <form id="add-stock-form">
             <div class="form-group">
-              <label>股票代码</label>
+              <label>Stock Symbol</label>
               <input type="text" id="modal-stock-code" readonly>
             </div>
             <div class="form-group">
-              <label>数量</label>
+              <label>Quantity</label>
               <input type="number" id="modal-stock-quantity" min="1" required>
             </div>
             <div class="form-group">
-                <label>购买价格</label>
+                <label>Purchase Price</label>
                 <input type="number" id="modal-stock-price" step="0.01" min="0" required>
             </div>
             <div class="form-group">
-              <label>购买日期</label>
+              <label>Purchase Date</label>
               <input type="date" id="modal-stock-date" readonly>
             </div>
-            <button type="submit" class="add-btn">加入持仓</button>
+            <button type="submit" class="add-btn">Add to Portfolio</button>
           </form>
         </div>
       </div>
@@ -1075,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const stockSymbol = tickerInput.value.trim().toUpperCase();
         
         if (!stockSymbol) {
-            showError('请输入股票代码');
+            showError('Please enter a stock symbol.');
             return;
         }
         
@@ -1093,20 +1093,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || '获取股票数据失败');
+                throw new Error(errorData.message || 'Failed to fetch stock data');
             }
             
             const stockData = await response.json();
-            console.log('股票数据:', stockData);
+            console.log('Stock data:', stockData);
             
             // 验证数据格式
             if (!stockData.history_price || !Array.isArray(stockData.history_price)) {
-                throw new Error('无效的股票数据格式');
+                throw new Error('Invalid stock data format received');
             }
             
             renderStockChart(stockData);
         } catch (error) {
-            console.error('获取股票数据失败:', error);
+            console.error('Failed to obtain stock data:', error);
             showError(error.message);
             clearChart();
         }
@@ -1149,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     title: {
                         display: true,
-                        text: `${stockData.stock_name} (${stockData.stock_code}) - 当前价: $${currentPrice.toFixed(2)} (${isPositive ? '+' : ''}${changePercent}%)`,
+                        text: `${stockData.stock_name} (${stockData.stock_code}) - Current price: $${currentPrice.toFixed(2)} (${isPositive ? '+' : ''}${changePercent}%)`,
                         font: {
                             size: 16
                         }
@@ -1190,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 显示加载状态
     function showLoading() {
         clearChart();
-        chartWrapper.innerHTML = '<div class="loading">加载数据中...</div>';
+        chartWrapper.innerHTML = '<div class="loading">Loading data...</div>';
     }
     
     // 清除图表
@@ -1435,14 +1435,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 // 显示加载状态
                 const errorMsg = document.getElementById('stock-error');
-                errorMsg.textContent = `加载 ${ticker} 数据中...`;
+                errorMsg.textContent = `Loading ${ticker} data...`;
                 errorMsg.className = 'error-message';
                 
                 // 调用API获取数据
                 const response = await fetch(`https://c4rm9elh30.execute-api.us-east-1.amazonaws.com/default/cachedPriceData?ticker=${ticker}`);
                 
                 if (!response.ok) {
-                    throw new Error(`无法获取股票数据: ${ticker}`);
+                    throw new Error(`Unable to obtain stock data: ${ticker}`);
                 }
                 
                 const data = await response.json();
@@ -1457,7 +1457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('stock-error').textContent = `获取股票数据失败: ${error.message}`;
+                document.getElementById('stock-error').textContent = `Failed to obtain stock data: ${error.message}`;
             }
         }
 
@@ -1485,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ticker = tickerInput.value.toUpperCase();
     
     if (!ticker) {
-        document.getElementById('stock-error').textContent = "请输入股票代码";
+        document.getElementById('stock-error').textContent = "Please enter a stock symbol.";
         return;
     }
     
@@ -1495,13 +1495,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
     
     if (existingStock) {
-        document.getElementById('stock-error').textContent = `${ticker} 已经在您的持仓中`;
+        document.getElementById('stock-error').textContent = `${ticker} are already in your holdings.`;
         return;
     }
     
     // 显示加载状态
     const errorMsg = document.getElementById('stock-error');
-    errorMsg.textContent = `添加 ${ticker} 到持仓中...`;
+    errorMsg.textContent = `Add ${ticker} to the holdings...`;
     
     // 获取股票数据
     getStockData(ticker)
@@ -1532,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tickerInput.value = '';
         })
         .catch(error => {
-            errorMsg.textContent = `添加股票失败: ${error.message}`;
+            errorMsg.textContent = `Failed to add stock: ${error.message}`;
         });
 }
 
@@ -1584,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="account-item-header">
                 <div>
                     <div class="account-name">${stock.name}</div>
-                    <div class="account-type">${stock.shares} 股</div>
+                    <div class="account-type">${stock.shares} shares</div>
                 </div>
                 <div class="account-balance">$${value.toFixed(2)}</div>
             </div>
@@ -1593,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${changeSign}${changePercent.toFixed(2)}%
                 </span>
                 <button class="sell-btn" data-symbol="${stock.symbol}" style="float: right; background: var(--negative); color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer;">
-                    卖出
+                    Sale
                 </button>
             </div>
         `;
@@ -1700,7 +1700,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 data: {
                     labels: chartData.labels,
                     datasets: [{
-                        label: `${ticker} 股价`,
+                        label: `${ticker} Stock Price`,
                         data: chartData.closes,
                         borderColor: '#2563eb',
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
@@ -1743,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             },
                             title: {
                                 display: true,
-                                text: '股价 (USD)'
+                                text: ' Stock price(USD)'
                             }
                         }
                     }
@@ -1851,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     };
                 }
                 
-                throw new Error(`无法获取股票数据: ${symbol}`);
+                throw new Error(`Unable to obtain stock data: ${symbol}`);
             }
         }
 
@@ -1961,13 +1961,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const symbol = symbolInput.value.trim().toUpperCase();
             
             if (!symbol) {
-                document.getElementById('api-error').textContent = "请输入股票代码";
+                document.getElementById('api-error').textContent = "Please enter a stock symbol.";
                 return;
             }
             
             // 显示加载状态
             const errorMsg = document.getElementById('api-error');
-            errorMsg.textContent = `加载 ${symbol} 数据中...`;
+            errorMsg.textContent = `Loading ${symbol} data...`;
             errorMsg.className = 'error-message';
             
             getStockData(symbol)
@@ -2005,12 +2005,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetch('http://localhost:5000/api/stockInfo/random-changes')
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('网络响应不正常');
+                        throw new Error('The network response was not ok');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('API返回数据:', data); // 调试用
+                    console.log('API returns data:', data); // 调试用
                     const container = document.getElementById('stock-indices');
                     
                     // 清空容器
@@ -2018,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     // 检查数据是否有效
                     if (!data || !Array.isArray(data) || data.length === 0) {
-                        throw new Error('无效的股票数据');
+                        throw new Error('Invalid  stock data');
                     }
                     
                     // 为每个股票创建显示元素
@@ -2028,7 +2028,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         // 验证数据
                         if (isNaN(changePercent) || isNaN(currentPrice)) {
-                            console.error('无效的股票数据:', stock);
+                            console.error('Invalid stock data:', stock);
                             return;
                         }
                         
@@ -2055,9 +2055,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 })
                 .catch(error => {
-                    console.error('获取股票数据失败:', error);
+                    console.error('Failed to obtain stock data:', error);
                     document.getElementById('stock-indices').innerHTML = `
-                        <div class="error-message">无法加载股票数据: ${error.message}</div>
+                        <div class="error-message">Unable to load stock data: ${error.message}</div>
                     `;
                 });
         });
@@ -2071,12 +2071,12 @@ async function fetchStockInfo(ticker) {
     try {
         const response = await fetch(`http://localhost:5000/api/stockInfo/${ticker}`);
         if (!response.ok) {
-            throw new Error('股票未找到');
+            throw new Error('Stock data not found');
         }
         currentStockInfo = await response.json();
         // 其他显示逻辑...
     } catch (error) {
-        console.error('获取股票信息失败:', error);
+        console.error('Failed to obtain stock data:', error);
         alert(error.message);
     }
 }
@@ -2088,7 +2088,7 @@ document.getElementById('add-to-portfolio').addEventListener('click', async func
     const stockCode = tickerInput.value.trim();
     
     if (!stockCode) {
-        alert('请输入股票代码');
+        alert('Please enter a stock code');
         return;
     }
     
@@ -2098,7 +2098,7 @@ document.getElementById('add-to-portfolio').addEventListener('click', async func
             // 如果没有查询过或查询的不是当前股票，则先获取股票信息
             await fetchStockInfo(stockCode);
         } catch (error) {
-            alert('获取股票价格失败，请手动输入价格');
+            alert('Failed to obtain stock data, please enter the price manually');
             // 继续显示弹窗，让用户可以手动输入价格
         }
     }
@@ -2147,13 +2147,13 @@ document.getElementById('add-stock-form').addEventListener('submit', function(e)
     const date = document.getElementById('modal-stock-date').value;
     
     if (isNaN(price) || price <= 0) {
-        alert('请输入有效的购买价格');
+        alert('Please enter a valid price');
         priceInput.focus();
         return;
     }
     
     if (isNaN(quantity) || quantity <= 0) {
-        alert('请输入有效的数量');
+        alert('Please enter a valid quantity');
         document.getElementById('modal-stock-quantity').focus();
         return;
     }
