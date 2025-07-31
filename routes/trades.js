@@ -114,5 +114,37 @@ router.get('/net-assets', async (req, res) => {
   }
 });
 
+// 功能3：获取当前净资产（总收入 - 总支出）
+router.get('/net-assets/current', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT trade_type, SUM(amount) AS total
+      FROM trade_record
+      GROUP BY trade_type
+    `);
+
+    let totalIncome = 0;
+    let totalExpenditure = 0;
+
+    rows.forEach(row => {
+      if (row.trade_type === '收入') {
+        totalIncome = Number(row.total);
+      } else if (row.trade_type === '支出') {
+        totalExpenditure = Number(row.total);
+      }
+    });
+
+    const netAsset = totalIncome - totalExpenditure;
+
+    res.json({
+      income: totalIncome,
+      expenditure: totalExpenditure,
+      net_asset: Number(netAsset.toFixed(2))
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router;

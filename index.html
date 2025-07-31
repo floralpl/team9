@@ -92,10 +92,14 @@
         }
 
         .account-value {
-            font-size: 22px;
-            font-weight: 700;
-            margin: 4px 0;
-        }
+            font-size: 1.3rem; /* 可调节大小 */
+            font-weight: bold;
+            color: #2e7d32; /* 深绿色，更显资产 */
+            white-space: nowrap; /* 避免换行 */
+            overflow: hidden;    /* 防止溢出 */
+            text-overflow: ellipsis; /* 超出时显示省略号 */
+            max-width: 100%; /* 确保不撑破父容器 */
+          }
 
         .account-item {
             padding: 16px;
@@ -845,7 +849,7 @@ input:focus:invalid {
                             <div class="card-header">
                                 <div class="card-title">
                                     <i class="fas fa-wallet"></i>
-                                    CASH
+                                    CASH  
                                 </div>
                                 <div class="account-value" id="total-cash-balance">$0.00</div>
                             </div>
@@ -992,10 +996,7 @@ input:focus:invalid {
                   </div>
 
                 <!-- 搜索股票界面 -->
-                <div class="api-controls">
-                    <input type="text" id="symbol-input" class="symbol-input" placeholder="Enter stock symbol (e.g. AAPL)">
-                    <button id="add-symbol" class="add-btn">Add Stock</button>
-                </div>
+                
                 <div id="api-error" class="error-message"></div>
 
                 <div class="insights-container">
@@ -1049,6 +1050,23 @@ input:focus:invalid {
 
         // 全局图表实例
 let stockChart = null;
+
+//获取cash值
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/trades/net-assets/current');
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const data = await response.json();
+      const netAsset = data.net_asset;
+  
+      // 将 net_asset 值格式化为货币格式并更新页面
+      const cashBalanceElement = document.getElementById('total-cash-balance');
+      cashBalanceElement.textContent = `$${netAsset.toFixed(2)}`;
+    } catch (error) {
+      console.error('获取净资产数据失败:', error);
+    }
+  });
 
 document.addEventListener('DOMContentLoaded', function() {
     // 获取DOM元素
