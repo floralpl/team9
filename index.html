@@ -1108,8 +1108,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // 绑定 sell 按钮事件
                     document.getElementById(`sell-${stock.stock_code}`).addEventListener("click", function () {
-                        alert(`Sell clicked for ${stock.stock_code}`);
-                        // 这里可以调用后端接口进行卖出操作
+                        // 向后端发送删除股票请求
+                        fetch("http://localhost:5000/api/portfolio/remove", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                stock_code: stock.stock_code
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(`股票 ${stock.stock_code} 出售成功`);
+                                // 成功后刷新页面或更新视图
+                                window.location.reload();
+                            } else {
+                                alert(data.error || "出售失败");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("出售请求失败:", error);
+                            alert("出售请求失败，请稍后再试");
+                        });
                     });
                 });
             } else {
