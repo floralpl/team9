@@ -77,43 +77,50 @@ router.post('/add', async (req, res) => {
 
 // 从投资组合移除股票
 router.post('/remove', async (req, res) => {
-  const { stock_code, quantity, price } = req.body;
+    const { stock_code } = req.body;
+    
+    try {
+      // 查询该股票的当前持有数量
+      const [holding] = await db.query(
+        `SELECT quantity FROM portfolio WHERE stock_code = ?`,
+        [stock_code]
+      );
   
-  try {
-    // 检查是否持有足够数量
-    const [holding] = await db.query(
-      `SELECT quantity FROM portfolio WHERE stock_code = ?`,
-      [stock_code]
-    );
-    
-    if (holding.length === 0 || holding[0].quantity < quantity) {
-      return res.status(400).json({ error: '持有数量不足' });
-    }
-    
-    // 添加交易记录（收入）
-    await db.query(
-      `INSERT INTO trade_record (trade_type, trade_detail, amount)
-       VALUES ('收入', '出售股票 ${stock_code}', ?)`,
-      [quantity * price]
-    );
-    
-    // 更新投资组合
-    if (holding[0].quantity === quantity) {
+      if (holding.length === 0 || holding[0].quantity === 0) {
+        return res.status(400).json({ error: '没有持有该股票' });
+      }
+  
+      // 获取该股票的当前价格
+      const [stockInfo] = await db.query(
+        `SELECT current_price FROM stock_info WHERE stock_code = ?`,
+        [stock_code]
+      );
+  
+      if (stockInfo.length === 0) {
+        return res.status(404).json({ error: '股票信息未找到' });
+      }
+  
+      const price = stockInfo[0].current_price;
+      const quantity = holding[0].quantity;
+  
+      // 记录交易信息（出售股票的全部数量）
+      await db.query(
+        `INSERT INTO trade_record (trade_type, trade_detail, amount)
+         VALUES ('收入', 'stock', ?)`,
+        [quantity * price]
+      );
+  
+      // 更新投资组合，删除该股票或将其数量设置为 0
       await db.query(
         `DELETE FROM portfolio WHERE stock_code = ?`,
         [stock_code]
       );
-    } else {
-      await db.query(
-        `UPDATE portfolio SET quantity = quantity - ? WHERE stock_code = ?`,
-        [quantity, stock_code]
-      );
+  
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  
 });
 
 module.exports = router;
